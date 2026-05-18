@@ -219,8 +219,10 @@ async def infer(
                     per_min = rel.get("per_parent_min")
                     per_max = rel.get("per_parent_max")
                     schema["relationships"].append({
-                        "source_table": rel.get("source_table", ""),
-                        "target_table": rel.get("target_table", ""),
+                        "source_table":  rel.get("source_table", ""),
+                        "source_column": rel.get("source_column", ""),
+                        "target_table":  rel.get("target_table", ""),
+                        "target_column": rel.get("target_column", ""),
                         "cardinality": "one_to_many",
                         "per_parent": {"min": per_min, "max": per_max, "shape": "Uniform"} if (per_min is not None or per_max is not None) else None,
                     })
