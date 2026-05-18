@@ -103,7 +103,7 @@ Datagenia is a full-stack application that generates realistic, compliant synthe
 | 🛒 **E-Commerce Orders** | `customers → orders → order_items` | PCI, PII, GDPR |
 | 🏥 **Healthcare Patients** | `patients → visits → prescriptions` | HIPAA, PII, GDPR |
 | 👩‍💼 **HR & Payroll** | `employees → leave_requests` | SOX, PII, GDPR |
-| 🏦 **Banking & Accounts** | `customers → accounts → transactions + loans` | PCI, GLBA, SOX, PII |
+| 🏦 **Banking & Loans** | `customers → accounts → transactions + loans` | PCI, GLBA, SOX, PII |
 
 ---
 

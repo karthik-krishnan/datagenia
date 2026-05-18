@@ -33,7 +33,7 @@ const DEMO_STARTERS = [
   },
   {
     id: "demo-banking",
-    title: "Banking & Accounts",
+    title: "Banking & Loans",
     description: "Customers → Accounts → Transactions + Loans. PCI, GLBA, and SOX compliance.",
     emoji: "🏦",
     contextKeyword: "bank account transaction loan kyc AML GLBA",
