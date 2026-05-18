@@ -128,8 +128,14 @@ export const api = {
       body: JSON.stringify({ ...payload, llm_config: llm }),
     });
     if (!res.ok) {
-      const t = await res.text();
-      throw new Error(t || `HTTP ${res.status}`);
+      let msg = `HTTP ${res.status}`;
+      try {
+        const data = await res.json();
+        msg = typeof data.detail === "string" ? data.detail : JSON.stringify(data);
+      } catch (_) {
+        try { msg = await res.text() || msg; } catch (_2) {}
+      }
+      throw new Error(msg);
     }
     const blob = await res.blob();
     const cd = res.headers.get("content-disposition") || "";
