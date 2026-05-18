@@ -114,7 +114,8 @@ export default function App() {
     maxVolumeRecords,
   } = useAppStore();
 
-  const [schemaTab, setSchemaTab] = useState(0);
+  const [schemaTab, setSchemaTab]       = useState(0);
+  const [relHasErrors, setRelHasErrors] = useState(false);
   // Snapshot of context + files used for the last successful inference.
   // Re-infer is only enabled when something has changed since then.
   const [lastInferredState, setLastInferredState] = useState(null);
@@ -658,10 +659,16 @@ export default function App() {
                 relationships={relationships}
                 onUpdate={setRelationships}
                 aiRelationships={inferredSchema?.relationships || []}
+                onHasErrors={setRelHasErrors}
               />
               <div className="flex justify-between items-center">
                 <button onClick={() => setStage(prevStage(4))} className="inline-flex items-center h-10 px-5 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 text-base font-medium">Back</button>
-                <button onClick={() => setStage(nextStage(4))} className="inline-flex items-center h-10 px-5 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 text-base font-medium">Continue →</button>
+                <button
+                  onClick={() => setStage(nextStage(4))}
+                  disabled={relHasErrors}
+                  title={relHasErrors ? "Fix incomplete relationships before continuing" : undefined}
+                  className={`inline-flex items-center h-10 px-5 rounded-lg text-base font-medium transition ${relHasErrors ? "bg-indigo-300 text-white cursor-not-allowed" : "bg-indigo-600 text-white hover:bg-indigo-700"}`}
+                >Continue →</button>
               </div>
             </div>
           )}

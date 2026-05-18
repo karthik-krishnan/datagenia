@@ -11,6 +11,19 @@ from app_config import MAX_VOLUME_RECORDS
 router = APIRouter()
 
 
+def _validate_relationships(relationships):
+    """Return an error message if any relationship is incomplete, else None."""
+    for i, r in enumerate(relationships):
+        missing = [f for f in ("source_table", "source_column", "target_table", "target_column") if not r.get(f)]
+        if missing:
+            label = f"{r.get('source_table', '?')} → {r.get('target_table', '?')}"
+            raise HTTPException(
+                status_code=400,
+                detail=f"Relationship {i + 1} ({label}) is incomplete — missing: {', '.join(missing)}. "
+                       f"Please fix or remove it before generating.",
+            )
+
+
 class GenerateRequest(BaseModel):
     schema: Dict[str, Any]
     characteristics: Dict[str, Any] = {}
@@ -25,6 +38,7 @@ class GenerateRequest(BaseModel):
 
 @router.post("/preview")
 async def preview(req: GenerateRequest, db: AsyncSession = Depends(get_db)):
+    _validate_relationships(req.relationships)
     data = generate_data(
         schema=req.schema,
         characteristics=req.characteristics,
@@ -38,6 +52,7 @@ async def preview(req: GenerateRequest, db: AsyncSession = Depends(get_db)):
 
 @router.post("/")
 async def generate_full(req: GenerateRequest, db: AsyncSession = Depends(get_db)):
+    _validate_relationships(req.relationships)
     if req.volume > MAX_VOLUME_RECORDS:
         raise HTTPException(
             status_code=400,

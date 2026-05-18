@@ -462,10 +462,10 @@ def _compute_table_volumes(
     for r in all_rels:
         card = r.get("cardinality", "one_to_many")
         if card in ("one_to_many",):
-            tbl = r["target_table"]
+            tbl = r.get("target_table", "")
         elif card == "many_to_one":
             # legacy: source was child
-            tbl = r["source_table"]
+            tbl = r.get("source_table", "")
         else:
             continue
         if tbl in tname_set:
@@ -489,15 +489,15 @@ def _compute_table_volumes(
         card = r.get("cardinality", "one_to_many")
         if card == "many_to_one":
             # legacy: source was child
-            child = r["source_table"]
+            child = r.get("source_table", "")
             card  = "one_to_many"
         elif card == "one_to_many":
-            child = r["target_table"]
+            child = r.get("target_table", "")
         elif card == "one_to_one":
-            child = r["target_table"]
+            child = r.get("target_table", "")
         else:
             continue
-        if child not in incoming or card == "one_to_many":
+        if child and (child not in incoming or card == "one_to_many"):
             incoming[child] = card
 
     result: Dict[str, int] = {}
@@ -547,7 +547,8 @@ def generate_data(
     adj:        Dict[str, List[str]] = defaultdict(list)   # parent → [children]
 
     for r in all_rels:
-        src, tgt = r["source_table"], r["target_table"]
+        src = r.get("source_table", "")
+        tgt = r.get("target_table", "")
         if src in in_degree and tgt in in_degree and tgt != src:
             adj[src].append(tgt)
             in_degree[tgt] += 1

@@ -364,6 +364,67 @@ class TestMultiHopChainJoin:
         assert len(data["order_items"]) == 45   # 5 × 9
 
 
+class TestIncompleteRelationships:
+    """Incomplete relationship objects (missing columns) must not crash generation."""
+
+    def _schema(self):
+        return _make_schema(
+            ("users",  [_col("id", "integer"), _col("name")]),
+            ("orders", [_col("id", "integer"), _col("user_id", "integer")]),
+        )
+
+    def test_missing_source_column_is_skipped(self):
+        """A relationship missing source_column should be silently skipped."""
+        rels = [{
+            "source_table": "users",
+            # source_column intentionally absent
+            "target_table": "orders",
+            "target_column": "user_id",
+            "cardinality": "one_to_many",
+        }]
+        data = generate_data(self._schema(), {}, {}, rels, volume=5, llm_settings=DEMO_SETTINGS)
+        assert "users" in data and "orders" in data
+
+    def test_missing_target_column_is_skipped(self):
+        """A relationship missing target_column should be silently skipped."""
+        rels = [{
+            "source_table": "users",
+            "source_column": "id",
+            "target_table": "orders",
+            # target_column intentionally absent
+            "cardinality": "one_to_many",
+        }]
+        data = generate_data(self._schema(), {}, {}, rels, volume=5, llm_settings=DEMO_SETTINGS)
+        assert "users" in data and "orders" in data
+
+    def test_completely_empty_relationship_is_skipped(self):
+        """An entirely empty relationship dict must not raise KeyError."""
+        data = generate_data(self._schema(), {}, {}, [{}], volume=5, llm_settings=DEMO_SETTINGS)
+        assert "users" in data and "orders" in data
+
+    def test_mix_of_valid_and_incomplete_relationships(self):
+        """Only the valid relationship should be applied; the partial one is skipped."""
+        rels = [
+            # valid
+            {
+                "source_table": "users", "source_column": "id",
+                "target_table": "orders", "target_column": "user_id",
+                "cardinality": "one_to_many", "confidence": 0.9,
+            },
+            # incomplete — missing both columns
+            {
+                "source_table": "users",
+                "target_table": "orders",
+            },
+        ]
+        data = generate_data(self._schema(), {}, {}, rels, volume=5, llm_settings=DEMO_SETTINGS)
+        user_ids = {r["id"] for r in data["users"]}
+        for order in data["orders"]:
+            assert order["user_id"] in user_ids, (
+                f"FK integrity broken: orders.user_id={order['user_id']} not in {user_ids}"
+            )
+
+
 class TestJoinEdgeCases:
 
     def test_no_relationships_generates_independent_tables(self):

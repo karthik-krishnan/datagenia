@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const CARDS = ["one_to_one", "one_to_many", "many_to_one", "many_to_many"];
 const CARD_LABELS = { one_to_one: "1 : 1", one_to_many: "1 : N", many_to_one: "N : 1", many_to_many: "N : N" };
@@ -93,11 +93,21 @@ function CardinalityPicker({ value, onChange }) {
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
-export default function RelationshipMapper({ schema, relationships, onUpdate, aiRelationships = [] }) {
-  const [adding, setAdding]       = useState(false);
-  const [draft, setDraft]         = useState({ source_table: "", source_column: "", target_table: "", target_column: "", cardinality: "one_to_many" });
+export default function RelationshipMapper({ schema, relationships, onUpdate, aiRelationships = [], onHasErrors }) {
+  const [adding, setAdding]         = useState(false);
+  const [draft, setDraft]           = useState({ source_table: "", source_column: "", target_table: "", target_column: "", cardinality: "one_to_many" });
   const [draftError, setDraftError] = useState(null);
-  const [rowErrors, setRowErrors] = useState({});   // index → error string | null
+
+  // Derived: validate every existing row whenever `relationships` changes.
+  // This catches auto-inferred relationships that are missing columns on first render.
+  const rowErrors = Object.fromEntries(
+    relationships.map((r, i) => [i, validate(r, relationships, i)])
+  );
+  const hasErrors = Object.values(rowErrors).some(Boolean);
+
+  useEffect(() => {
+    onHasErrors?.(hasErrors);
+  }, [hasErrors]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // True when the user has diverged from the AI-detected relationships.
   const isDirty = aiRelationships.length > 0 &&
@@ -107,7 +117,6 @@ export default function RelationshipMapper({ schema, relationships, onUpdate, ai
     onUpdate(aiRelationships);
     setAdding(false);
     setDraftError(null);
-    setRowErrors({});
   };
 
   const tables  = schema?.tables || [];
@@ -135,18 +144,11 @@ export default function RelationshipMapper({ schema, relationships, onUpdate, ai
     if ("target_table" in patch && patch.target_table !== current.target_table) {
       updated.target_column = "";
     }
-    const err = validate(updated, relationships, i);
-    setRowErrors((prev) => ({ ...prev, [i]: err }));
     onUpdate(relationships.map((r, idx) => (idx === i ? updated : r)));
   };
 
   const remove = (i) => {
     onUpdate(relationships.filter((_, idx) => idx !== i));
-    setRowErrors((prev) => {
-      const next = { ...prev };
-      delete next[i];
-      return next;
-    });
   };
 
   // ── Add new row ─────────────────────────────────────────────────────────────
