@@ -33,7 +33,14 @@ def _parse_llm_response(raw: str) -> Dict[str, Any]:
     parsed.setdefault("volume", None)
     parsed.setdefault("columns", [])
     parsed.setdefault("tables", [])
-    parsed.setdefault("relationships", [])
+    # Strip relationships that are missing required fields
+    raw_rels = parsed.get("relationships") or []
+    parsed["relationships"] = [
+        r for r in raw_rels
+        if isinstance(r, dict)
+        and r.get("source_table") and r.get("source_column")
+        and r.get("target_table") and r.get("target_column")
+    ]
     parsed.setdefault("distributions", {})
     parsed.setdefault("compliance_rules", {})
     parsed.setdefault("temporal", {})
