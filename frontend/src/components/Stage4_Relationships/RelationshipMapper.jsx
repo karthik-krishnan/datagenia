@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 const CARDS = ["one_to_one", "one_to_many", "many_to_one", "many_to_many"];
 const CARD_LABELS = { one_to_one: "1 : 1", one_to_many: "1 : N", many_to_one: "N : 1", many_to_many: "N : N" };
@@ -93,7 +93,7 @@ function CardinalityPicker({ value, onChange }) {
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
-export default function RelationshipMapper({ schema, relationships, onUpdate, aiRelationships = [], onHasErrors }) {
+export default function RelationshipMapper({ schema, relationships, onUpdate, aiRelationships = [] }) {
   const [adding, setAdding]         = useState(false);
   const [draft, setDraft]           = useState({ source_table: "", source_column: "", target_table: "", target_column: "", cardinality: "one_to_many" });
   const [draftError, setDraftError] = useState(null);
@@ -103,11 +103,6 @@ export default function RelationshipMapper({ schema, relationships, onUpdate, ai
   const rowErrors = Object.fromEntries(
     relationships.map((r, i) => [i, validate(r, relationships, i)])
   );
-  const hasErrors = Object.values(rowErrors).some(Boolean);
-
-  useEffect(() => {
-    onHasErrors?.(hasErrors);
-  }, [hasErrors]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // True when the user has diverged from the AI-detected relationships.
   const isDirty = aiRelationships.length > 0 &&

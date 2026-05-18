@@ -114,8 +114,12 @@ export default function App() {
     maxVolumeRecords,
   } = useAppStore();
 
-  const [schemaTab, setSchemaTab]       = useState(0);
-  const [relHasErrors, setRelHasErrors] = useState(false);
+  const [schemaTab, setSchemaTab] = useState(0);
+  // Derived — true the moment any relationship is missing a required field.
+  // Computed inline so it is correct on the very first render (no useState + useEffect race).
+  const relHasErrors = relationships.some(
+    (r) => !r.source_table || !r.source_column || !r.target_table || !r.target_column
+  );
   // Snapshot of context + files used for the last successful inference.
   // Re-infer is only enabled when something has changed since then.
   const [lastInferredState, setLastInferredState] = useState(null);
@@ -659,7 +663,6 @@ export default function App() {
                 relationships={relationships}
                 onUpdate={setRelationships}
                 aiRelationships={inferredSchema?.relationships || []}
-                onHasErrors={setRelHasErrors}
               />
               <div className="flex justify-between items-center">
                 <button onClick={() => setStage(prevStage(4))} className="inline-flex items-center h-10 px-5 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 text-base font-medium">Back</button>
