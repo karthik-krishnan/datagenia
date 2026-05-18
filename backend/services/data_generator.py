@@ -604,18 +604,24 @@ def generate_data(
         # Legacy backward compat: treat old many_to_one as one_to_many
         if card == "many_to_one":
             card = "one_to_many"
+        src_tbl = r.get("source_table", "")
+        src_col = r.get("source_column", "id")
+        tgt_tbl = r.get("target_table", "")
+        tgt_col = r.get("target_column", "id")
+        if not src_tbl or not tgt_tbl:
+            continue
         # FK lives in target_table (child); it references source_table (parent)
         if card in ("one_to_many", "one_to_one"):
-            fk_map.setdefault(r["target_table"], {})[r["target_column"]] = {
-                "target_table":  r["source_table"],
-                "target_column": r["source_column"],
+            fk_map.setdefault(tgt_tbl, {})[tgt_col] = {
+                "target_table":  src_tbl,
+                "target_column": src_col,
                 "cardinality":   card,
             }
         else:
             # many_to_many or other — keep source_table convention
-            fk_map.setdefault(r["source_table"], {})[r["source_column"]] = {
-                "target_table":  r["target_table"],
-                "target_column": r["target_column"],
+            fk_map.setdefault(src_tbl, {})[src_col] = {
+                "target_table":  tgt_tbl,
+                "target_column": tgt_col,
                 "cardinality":   card,
             }
 
